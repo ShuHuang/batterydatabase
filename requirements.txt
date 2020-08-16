@@ -1,0 +1,4 @@
+regex==2020.1.8
+sympy==1.5.1
+pubchempy==1.0.4
+pymongo==3.10.1

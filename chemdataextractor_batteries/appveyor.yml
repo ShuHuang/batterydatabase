@@ -1,0 +1,27 @@
+platform:
+  - x64
+
+environment:
+  matrix:
+    - PYTHON_VERSION: 2.7
+      CONDA_INSTALL_LOCN: C:\\Miniconda
+    - PYTHON_VERSION: 3.5
+      CONDA_INSTALL_LOCN: C:\\Miniconda35-x64
+    - PYTHON_VERSION: 3.6
+      CONDA_INSTALL_LOCN: C:\\Miniconda36-x64
+
+install:
+  - cmd: call %CONDA_INSTALL_LOCN%\Scripts\activate.bat
+  - cmd: conda config --set always_yes yes --set changeps1 no
+  - cmd: conda update -q conda
+  - cmd: conda config --add channels chemdataextractor
+  - cmd: conda info -a
+  - cmd: conda create -q -n cde python=%PYTHON_VERSION% appdirs beautifulsoup4 click cssselect dawg lxml nltk pdfminer.six python-dateutil requests six python-crfsuite pyyaml pytest
+  - cmd: activate cde
+  - cmd: python setup.py install
+  - cmd: cde data download
+
+build: false
+
+test_script:
+  - pytest
