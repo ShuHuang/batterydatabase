@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.scrape
-~~~~~~~~~~~~~~~~~~~~~~~~
-
 Declarative scraping framework for extracting structured data from HTML and XML documents.
 
 """
@@ -33,6 +30,8 @@ from .entity import Entity, EntityList, DocumentEntity
 from .fields import StringField, IntField, FloatField, BoolField, DateTimeField, EntityField, UrlField
 from .scraper import HtmlFormat, XmlFormat, GetRequester, PostRequester, UrlScraper, RssScraper, SearchScraper
 from .selector import Selector, SelectorList
+from .pub.elsevier import ElsevierHtmlDocument, ElsevierXmlDocument
 from .pub.nlm import NlmXmlDocument
 from .pub.rsc import RscHtmlDocument
 from .pub.springer import SpringerXmlDocument
+
