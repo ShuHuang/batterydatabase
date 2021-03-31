@@ -24,7 +24,6 @@ For example, a command could be like this:
 python extract.py '\test' '\save\' 0 1 'raw_data'
 ```
 
-After the raw data is extracted, it needs to be cleaned and converted into a standard format. We've provided the data clearning code in Jupyter Notebook dataclean.ipynb. The new version could be obtained after runing through it.
-```
+After the raw data is extracted, it needs to be cleaned and converted into a standard format. We've provided the data cleaning code in Jupyter Notebook dataclean.ipynb. The new version could be obtained after running through it.
 
 Please refer to the source code for details.
