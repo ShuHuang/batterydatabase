@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.nlp.cem
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Named entity recognition (NER) for Chemical entity mentions (CEM).
 
 """
@@ -309,6 +306,11 @@ STOP_RES = [
     '\d ml$',  # properties
     '\.(png|gif|jpg|txt|html|docx?|xlsx?)$',  # File extensions
     '^(tel|fax)\s*:?\s*\+?\s*\d',  # phone numbers
+    '^(N|n)(O|o)\.? .*',  # Serial number
+    '^1\-s2.*',  # Elsevier DOI
+    '^\d+(\.\d+)?\-\d+(\.\d+)?.*',  # number
+    '^[A-Z]{2,}.*',
+    '^[\u0370-\u03ff\u1f00-\u1fff].*',  # Starts with greek symbols
 ]
 
 #: Regular expressions defining collections of words that should be split if joined by hyphens or -to-

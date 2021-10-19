@@ -3,7 +3,7 @@
 chemdataextractor.parse.battery_coulombic.py
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Parser for Coulombic efficiency.
+Parser for Coulombic effciency.
 
 """
 
@@ -11,13 +11,12 @@ import logging
 from lxml import etree
 import traceback
 
-from . import R, I, W, T, Optional, merge, join, Any, OneOrMore, Not, ZeroOrMore, SkipTo
-from .base import BaseParser
+from . import R, I, W, Optional, merge, join
+from .base import BaseSentenceParser
 from ..utils import first
 from .cem import cem, chemical_label, lenient_chemical_label, solvent_name
 from .common import lbrct, dt, rbrct, comma
-from ..model import BatteryCoulombic, Compound
-from .extract import extract_value, extract_coul_units
+from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore, SkipTo
 
 log = logging.getLogger(__name__)
 
@@ -144,6 +143,7 @@ bc = (
     | cem_value_prefix
 )
 
+
 def print_tree(trees):
     print(trees)
     try:
@@ -152,13 +152,13 @@ def print_tree(trees):
         print('no tree')
 
 
-class CoulombicParser(BaseParser):
+class CoulombicParser(BaseSentenceParser):
     """"""
     root = bc
 
     def interpret(self, result, start, end):
-        #print(etree.tostring(result))
-        #print (result.tag)
+        # try:
+        compound = self.model.fields['compound'].model_class()
         raw_value = first(result.xpath('./coul/value/text()'))
         raw_units = first(result.xpath('./coul/units/text()'))
         try:
@@ -166,21 +166,26 @@ class CoulombicParser(BaseParser):
                 [i for i in (first(result.xpath('./specifier'))).itertext()])
         except BaseException:
             specifier = ''
-
-        battery_coulombic = Compound(
-            coulombics=[
-                BatteryCoulombic(
-                    raw_value=raw_value,
-                    raw_units=raw_units,
-                    specifier=specifier,
-                    value=extract_value(raw_value),
-                    units=extract_coul_units(raw_units),
-                )
-            ]
-        )
-
-        cem_el = first(result.xpath('./cem'))
-        if cem_el is not None:
-            battery_coulombic.names = cem_el.xpath('./name/text()')
-            battery_coulombic.labels = cem_el.xpath('./label/text()')
+        # print_tree(first(result.xpath('.')))
+        battery_coulombic = self.model(raw_value=raw_value,
+                                      raw_units=raw_units,
+                                      specifier=specifier,
+                                      value=self.extract_value(raw_value),
+                                      error=self.extract_error(raw_value),
+                                      units=self.extract_units(raw_units),
+                                      )
+        cem_lists = []
+        for cem_el in result.xpath('./cem'):
+            # print_tree(cem_el)
+            if cem_el is not None:
+                log.debug(etree.tostring(cem_el))
+                cem_lists.append(''.join(cem_el.xpath('./names/text()')))
+            battery_coulombic.compound = compound
+            battery_coulombic.compound.names = cem_lists
+            battery_coulombic.compound.labels = cem_el.xpath('./labels/text()')
+            log.debug(battery_coulombic.serialize())
         yield battery_coulombic
+        # except TypeError as e:
+        #     print('==========Error===============')
+        #     traceback.print_exc()
+        #     log.debug(e)

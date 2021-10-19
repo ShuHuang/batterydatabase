@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.reader.markup
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 XML and HTML readers based on lxml.
-
 """
 
 from __future__ import absolute_import
@@ -22,10 +18,11 @@ import six
 
 from ..errors import ReaderError
 from ..doc.document import Document
-from ..doc.text import Title, Heading, Paragraph, Caption, Citation, Footnote, Text, Sentence
-from ..doc.table import Table, Cell
-from ..doc.figure import Figure
+from ..doc.text import Title, Heading, Paragraph, Caption, Citation, Footnote, Text, Sentence, Cell
+# from ..doc.table import Table, Cell
 from ..doc.meta import MetaData
+# from ..doc.table_new import Table
+from ..doc.figure import Figure
 from ..scrape import INLINE_ELEMENTS
 from ..scrape.clean import clean
 from ..scrape.csstranslator import CssHTMLTranslator
@@ -55,6 +52,7 @@ class LxmlReader(six.with_metaclass(ABCMeta, BaseReader)):
     figure_css = 'figure'
     figure_caption_css = 'figcaption'
     citation_css = 'cite'
+
     metadata_css = 'head'
     metadata_publisher_css = 'meta[name="DC.publisher"]::attr("content"), meta[name="citation_publisher"]::attr("content")'
     metadata_author_css = 'meta[name="DC.Creator"]::attr("content"), meta[name="citation_author"]::attr("content")'
@@ -69,6 +67,7 @@ class LxmlReader(six.with_metaclass(ABCMeta, BaseReader)):
     metadata_lastpage_css = 'meta[name="citation_lastpage"]::attr("content")'
     metadata_pdf_url_css = 'meta[name="citation_pdf_url"]::attr("content")'
     metadata_html_url_css = 'meta[name="citation_fulltext_html_url"]::attr("content"), meta[name="citation_abstract_html_url"]::attr("content")'
+
     ignore_css = 'a.ref sup'
 
     #: Inline elements
@@ -136,7 +135,10 @@ class LxmlReader(six.with_metaclass(ABCMeta, BaseReader)):
             return [element_cls('')]
         element = elements[0]
         for next_element in elements[1:]:
-            element += element_cls(' ') + next_element
+            try:
+                element += element_cls(' ') + next_element
+            except TypeError as e:
+                log.warning('Adding of two objects was skipped. {} and {} cannot be added.'.format(str(type(element)), str(type(next_element))))
         return [element]
 
     def _parse_figure(self, el, refs, specials):
@@ -160,7 +162,7 @@ class LxmlReader(six.with_metaclass(ABCMeta, BaseReader)):
                             hdict[rownum] = {}
                         while colnum in hdict[rownum]:
                             colnum += 1
-                        hdict[rownum][colnum] = cell[0] if len(cell) > 0 else Cell('')
+                        hdict[rownum][colnum] = cell[0]
                     colnum += 1
         rows = []
         for row in sorted(hdict):
@@ -186,35 +188,29 @@ class LxmlReader(six.with_metaclass(ABCMeta, BaseReader)):
         else:
             return [''.join(el.itertext()).strip()]
 
-    def _parse_table(self, el, refs, specials):
-        caps = self._css(self.table_caption_css, el)
-        caption = self._parse_text(caps[0], refs=refs, specials=specials, element_cls=Caption)[0] if caps else Caption('')
-        hrows = self._parse_table_rows(self._css(self.table_head_row_css, el), refs=refs, specials=specials)
-        rows = self._parse_table_rows(self._css(self.table_body_row_css, el), refs=refs, specials=specials)
-        footnotes = self._parse_table_footnotes(self._css(self.table_footnote_css, el), refs=refs, specials=specials)
-        tab = Table(caption, headings=hrows, rows=rows, footnotes=footnotes, id=el.get('id', None))
-        return [tab]
+    # def _parse_table(self, el, refs, specials):
+    #     caps = self._css(self.table_caption_css, el)
+    #     caption = self._parse_text(caps[0], refs=refs, specials=specials, element_cls=Caption)[0] if caps else Caption('')
+    #     hrows = self._parse_table_rows(self._css(self.table_head_row_css, el), refs=refs, specials=specials)
+    #     rows = self._parse_table_rows(self._css(self.table_body_row_css, el), refs=refs, specials=specials)
+    #     footnotes = self._parse_table_footnotes(self._css(self.table_footnote_css, el), refs=refs, specials=specials)
+    #     tab = Table(caption, headings=hrows, rows=rows, footnotes=footnotes, id=el.get('id', None))
+    #     return [tab]
 
-    def _xpath(self, query, root):
-        result = root.xpath(query, smart_strings=False)
-        if type(result) is not list:
-            result = [result]
-        log.debug('Selecting XPath: {}: {}'.format(query, result))
-        return result
+    # def _parse_table(self, el, refs, specials):
+    #     caption_css = self._css(self.table_caption_css, el)
+    #     caption = self._parse_text(caption_css[0], refs=refs, specials=specials, element_cls=Caption)[0] if caption_css else Caption('')
+    #     hrows= self._parse_table_rows(self._css(self.table_head_row_css, el), refs=refs, specials=specials)
+    #     rows = rows = self._parse_table_rows(self._css(self.table_body_row_css, el), refs=refs, specials=specials)
+    #     data = []
+    #     for hr in hrows:
+    #         data.append([i.text.strip() for i in hr])
+    #     for r in rows:
+    #         data.append([i.text.strip() for i in r])
+    #     table = Table(caption, table_data=data)
 
-    def _css(self, query, root):
-        return self._xpath(CssHTMLTranslator().css_to_xpath(query), root)
+    #     return [table]
 
-    def _is_inline(self, element):
-        """Return True if an element is inline."""
-        if element.tag not in {etree.Comment, etree.ProcessingInstruction} and element.tag.lower() in self.inline_elements:
-            return True
-        return False
-
-    @abstractmethod
-    def _make_tree(self, fstring):
-        """Read a string into an lxml elementtree."""
-        pass
 
     def _parse_metadata(self, el, refs, specials):
         title = self._css(self.metadata_title_css, el)
@@ -249,10 +245,35 @@ class LxmlReader(six.with_metaclass(ABCMeta, BaseReader)):
         meta = MetaData(metadata)
         return [meta]
 
+
+    def _xpath(self, query, root):
+        result = root.xpath(query, smart_strings=False)
+        if type(result) is not list:
+            result = [result]
+        log.debug('Selecting XPath: {}: {}'.format(query, result))
+        return result
+
+    def _css(self, query, root):
+        return self._xpath(CssHTMLTranslator().css_to_xpath(query), root)
+
+    def _is_inline(self, element):
+        """Return True if an element is inline."""
+        if element.tag not in {etree.Comment, etree.ProcessingInstruction} and element.tag.lower() in self.inline_elements:
+            return True
+        return False
+
+    @abstractmethod
+    def _make_tree(self, fstring):
+        """Read a string into an lxml elementtree."""
+        pass
+
     def parse(self, fstring):
         root = self._make_tree(fstring)
+        self.root = root
+
         if root is None:
             raise ReaderError
+
         root = self._css(self.root_css, root)[0]
         for cleaner in self.cleaners:
             cleaner(root)
@@ -276,8 +297,8 @@ class LxmlReader(six.with_metaclass(ABCMeta, BaseReader)):
             specials[heading] = self._parse_text(heading, element_cls=Heading, refs=refs, specials=specials)
         for figure in figures:
             specials[figure] = self._parse_figure(figure, refs=refs, specials=specials)
-        for table in tables:
-            specials[table] = self._parse_table(table, refs=refs, specials=specials)
+        #for table in tables:
+         #   specials[table] = self._parse_table(table, refs=refs, specials=specials)
         for citation in citations:
             specials[citation] = self._parse_text(citation, element_cls=Citation, refs=refs, specials=specials)
         for md in metadata:

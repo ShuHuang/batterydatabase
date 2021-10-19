@@ -11,6 +11,8 @@ from __future__ import print_function
 from __future__ import unicode_literals
 import six
 from ..scrape.clean import clean, Cleaner
+from ..doc.table import Cell, Table
+from ..doc.text import Caption
 from ..doc.meta import MetaData
 from .markup import XmlReader
 from lxml import etree

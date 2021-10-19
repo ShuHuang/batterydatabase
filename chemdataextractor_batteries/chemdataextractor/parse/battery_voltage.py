@@ -11,13 +11,12 @@ import logging
 from lxml import etree
 import traceback
 
-from . import R, I, W, T, Optional, merge, join, Any, OneOrMore, Not, ZeroOrMore, SkipTo
-from .base import BaseParser
+from . import R, I, W, Optional, merge, join
+from .base import BaseSentenceParser
 from ..utils import first
 from .cem import cem, chemical_label, lenient_chemical_label, solvent_name
 from .common import lbrct, dt, rbrct, comma
-from ..model import BatteryVoltage, Compound
-from .extract import extract_value, extract_volt_units
+from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore, SkipTo
 
 log = logging.getLogger(__name__)
 
@@ -159,11 +158,11 @@ cem_value_prefix = ((multi_cem | cem_prefix | lenient_chemical_label)
                     + Optional(I('its') | I('their') | I('the')).hide() + volt_specifier)('volt_phrase')
 
 bc = (
-    value_prefix_cem
-    | cem_value_prefix
-    | cem_prefix_value
+    # value_prefix_cem
+    # | cem_value_prefix
+    cem_prefix_value
     | prefix_cem_value
-    | prefix_value_cem
+    # | prefix_value_cem
 )
 
 
@@ -175,35 +174,39 @@ def print_tree(trees):
         print('no tree')
 
 
-class VoltageParser(BaseParser):
+class VoltageParser(BaseSentenceParser):
     """"""
     root = bc
 
     def interpret(self, result, start, end):
-        #print(etree.tostring(result))
-        #print (result.tag)
+        # try:
+        compound = self.model.fields['compound'].model_class()
         raw_value = first(result.xpath('./volt/value/text()'))
         raw_units = first(result.xpath('./volt/units/text()'))
         try:
-            specifier = ' '.join(
-                [i for i in (first(result.xpath('./specifier'))).itertext()])
+            specifier = ' '.join( [i for i in (first(result.xpath('./specifier'))).itertext()])
         except BaseException:
             specifier = ''
-
-        battery_voltage = Compound(
-            voltages=[
-                BatteryVoltage(
-                    raw_value=raw_value,
-                    raw_units=raw_units,
-                    specifier=specifier,
-                    value=extract_value(raw_value),
-                    units=extract_volt_units(raw_units),
-                )
-            ]
-        )
-
-        cem_el = first(result.xpath('./cem'))
-        if cem_el is not None:
-            battery_voltage.names = cem_el.xpath('./name/text()')
-            battery_voltage.labels = cem_el.xpath('./label/text()')
+        # print_tree(first(result.xpath('.')))
+        battery_voltage = self.model(raw_value=raw_value,
+                                      raw_units=raw_units,
+                                      specifier=specifier,
+                                      value=self.extract_value(raw_value),
+                                      error=self.extract_error(raw_value),
+                                      units=self.extract_units(raw_units),
+                                      )
+        cem_lists = []
+        for cem_el in result.xpath('./cem'):
+            # print_tree(cem_el)
+            if cem_el is not None:
+                log.debug(etree.tostring(cem_el))
+                cem_lists.append(''.join(cem_el.xpath('./names/text()')))
+            battery_voltage.compound = compound
+            battery_voltage.compound.names = cem_lists
+            battery_voltage.compound.labels = cem_el.xpath('./labels/text()')
+            log.debug(battery_voltage.serialize())
         yield battery_voltage
+        # except TypeError as e:
+        #     print('==========Error===============')
+        #     traceback.print_exc()
+        #     log.debug(e)

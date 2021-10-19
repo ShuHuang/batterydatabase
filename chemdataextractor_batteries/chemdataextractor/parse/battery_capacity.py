@@ -12,12 +12,11 @@ from lxml import etree
 import traceback
 
 from . import R, I, W, T, Optional, merge, join, Any, OneOrMore, Not, ZeroOrMore, SkipTo
-from .base import BaseParser
+from .base import BaseSentenceParser
 from ..utils import first
 from .cem import cem, chemical_label, lenient_chemical_label, solvent_name
 from .common import lbrct, dt, rbrct, comma
-from ..model import BatteryCapacity, Compound
-from .extract import extract_value, extract_capa_units
+
 
 log = logging.getLogger(__name__)
 
@@ -206,13 +205,13 @@ def print_tree(trees):
         print('no tree')
 
 
-class BcParser(BaseParser):
+class BcParser(BaseSentenceParser):
     """"""
     root = bc
 
     def interpret(self, result, start, end):
-        #print(etree.tostring(result))
-        #print (result.tag)
+        # try:
+        compound = self.model.fields['compound'].model_class()
         raw_value = first(result.xpath('./capa/value/text()'))
         raw_units = first(result.xpath('./capa/units/text()'))
         try:
@@ -225,26 +224,35 @@ class BcParser(BaseParser):
         current_units = first(result.xpath('./current/units/text()'))
         cycle_value = first(result.xpath('./cycles/value/text()'))
         cycle_units = first(result.xpath('./cycles/units/text()'))
-
-        battery_capacity = Compound(
-            capacities=[
-                BatteryCapacity(
-                    raw_value=raw_value,
-                    raw_units=raw_units,
-                    specifier=specifier,
-                    value=extract_value(raw_value),
-                    units=extract_capa_units(raw_units),
-                    current_value=current_value,
-                    current_value1=current_value1,
-                    current_units=current_units,
-                    cycle_value=cycle_value,
-                    cycle_units=cycle_units
-                )
-            ]
-        )
-
-        cem_el = first(result.xpath('./cem'))
-        if cem_el is not None:
-            battery_capacity.names = cem_el.xpath('./name/text()')
-            battery_capacity.labels = cem_el.xpath('./label/text()')
+        # print_tree(first(result.xpath('.')))
+        # sh-- If chemical names are not in the tree, don't select.
+        # for child in (first(result.xpath('.'))).getchildren():
+        #     if child.tag == 'cem':
+        #         continue
+        battery_capacity = self.model(raw_value=raw_value,
+                                      raw_units=raw_units,
+                                      specifier=specifier,
+                                      value=self.extract_value(raw_value),
+                                      error=self.extract_error(raw_value),
+                                      units=self.extract_units(raw_units),
+                                      current_value=current_value,
+                                      current_value1=current_value1,
+                                      current_units=current_units,
+                                      cycle_value=cycle_value,
+                                      cycle_units=cycle_units  # , compound='name'
+                                      )
+        cem_lists = []
+        for cem_el in result.xpath('./cem'):
+            # print_tree(cem_el)
+            if cem_el is not None:
+                log.debug(etree.tostring(cem_el))
+                cem_lists.append(''.join(cem_el.xpath('./names/text()')))
+            battery_capacity.compound = compound
+            battery_capacity.compound.names = cem_lists
+            battery_capacity.compound.labels = cem_el.xpath('./labels/text()')
+            log.debug(battery_capacity.serialize())
         yield battery_capacity
+        # except TypeError as e:
+        #     print('==========Error===============')
+        #     traceback.print_exc()
+        #     log.debug(e)

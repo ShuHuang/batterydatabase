@@ -39,3 +39,10 @@ docs/_build/
 
 # PyCharm
 .idea/
+.vscode/
+main.py
+geckodriver.log
+.pytest_cache/
+.DS_Store
+
+log.txt

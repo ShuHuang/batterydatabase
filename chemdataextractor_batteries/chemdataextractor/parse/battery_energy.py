@@ -7,17 +7,17 @@ Parser for energy.
 
 """
 
+import re
 import logging
 from lxml import etree
 import traceback
 
-from . import R, I, W, T, Optional, merge, join, Any, OneOrMore, Not, ZeroOrMore, SkipTo
-from .base import BaseParser
+from . import R, I, W, Optional, merge, join
+from .base import BaseSentenceParser
 from ..utils import first
 from .cem import cem, chemical_label, lenient_chemical_label, solvent_name
 from .common import lbrct, dt, rbrct, comma
-from ..model import BatteryEnergy, Compound
-from .extract import extract_value, extract_ener_units
+from .elements import W, I, R, T, Optional, Any, OneOrMore, Not, ZeroOrMore, SkipTo
 
 log = logging.getLogger(__name__)
 
@@ -165,13 +165,14 @@ def print_tree(trees):
     except BaseException:
         print('no tree')
 
-class EnergyParser(BaseParser):
+
+class EnergyParser(BaseSentenceParser):
     """"""
     root = bc
 
     def interpret(self, result, start, end):
-        #print(etree.tostring(result))
-        #print (result.tag)
+        # try:
+        compound = self.model.fields['compound'].model_class()
         raw_value = first(result.xpath('./ener/value/text()'))
         raw_units = first(result.xpath('./ener/units/text()'))
         try:
@@ -179,21 +180,30 @@ class EnergyParser(BaseParser):
                 [i for i in (first(result.xpath('./specifier'))).itertext()])
         except BaseException:
             specifier = ''
-
-        battery_energy = Compound(
-            energies=[
-                BatteryEnergy(
-                    raw_value=raw_value,
-                    raw_units=raw_units,
-                    specifier=specifier,
-                    value=extract_value(raw_value),
-                    units=extract_ener_units(raw_units),
-                )
-            ]
-        )
-
-        cem_el = first(result.xpath('./cem'))
-        if cem_el is not None:
-            battery_energy.names = cem_el.xpath('./name/text()')
-            battery_energy.labels = cem_el.xpath('./label/text()')
+        # print_tree(first(result.xpath('.')))
+        # sh-- If chemical names are not in the tree, don't select.
+        # for child in (first(result.xpath('.'))).getchildren():
+        #     if child.tag == 'cem':
+        #         continue
+        battery_energy= self.model(raw_value=raw_value,
+                                      raw_units=raw_units,
+                                      specifier=specifier,
+                                      value=self.extract_value(raw_value),
+                                      error=self.extract_error(raw_value),
+                                      units=self.extract_units(raw_units),
+                                      )
+        cem_lists = []
+        for cem_el in result.xpath('./cem'):
+            # print_tree(cem_el)
+            if cem_el is not None:
+                log.debug(etree.tostring(cem_el))
+                cem_lists.append(''.join(cem_el.xpath('./names/text()')))
+            battery_energy.compound = compound
+            battery_energy.compound.names = cem_lists
+            battery_energy.compound.labels = cem_el.xpath('./labels/text()')
+            log.debug(battery_energy.serialize())
         yield battery_energy
+        # except TypeError as e:
+        #     print('==========Error===============')
+        #     traceback.print_exc()
+        #     log.debug(e)

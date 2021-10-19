@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.nlp.tokenize
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 Word and sentence tokenizers.
 
 """
@@ -633,7 +630,7 @@ class ChemWordTokenizer(WordTokenizer):
             return self._split_span(span, 2, 1)
 
         # Split things like \d+\.\d+([a-z]+) e.g. UV-vis/IR peaks with bracketed strength/shape
-        m = re.match('^(\d+\.\d+|\d{3,})(\([a-z]+\))$', text, re.I)
+        m = re.match('^(\d+\.\d+|\d{1,})(\([a-z]+\)|c)$', text, re.I)
         if m:
             return self._split_span(span, m.start(2), 1)
 

@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-chemdataextractor.reader.base
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
 
 """
 
@@ -18,6 +14,9 @@ import six
 
 class BaseReader(six.with_metaclass(ABCMeta)):
     """All Document Readers should implement a parse method."""
+
+    def __init__(self):
+        self.root = None
 
     def detect(self, fstring, fname=None):
         """Quickly check if this reader can parse the input. Reader subclasses should override this.
