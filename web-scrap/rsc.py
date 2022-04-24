@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-Royal Society of Chemistry web-scraper. Please get the permission from RSC before web-scraping.
-"""
+web-scrap.rsc.py
+~~~~~~~~~~~~~~~~
 
-__author__ = "Shu Huang"
-__email__ = "sh2009@cam.ac.uk"
+Royal Society of Chemistry web-scraper. Please get the permission from RSC before web-scraping.
+author: Shu Huang (sh2009@cam.ac.uk)
+"""
 
 import re
 import requests
 import urllib.request
-from chemdataextractor.scrape.pub.rsc import RscSearchScraper
+from chemdataextractor_batteries.chemdataextractor15.scrape.pub.rsc import RscSearchScraper
 from selenium import webdriver
 
 

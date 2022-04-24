@@ -1,6 +1,8 @@
 # batterydatabase
 
-Tools for auto-generating battery materials database.
+[![License](http://img.shields.io/:license-mit-blue.svg?style=flat-square)](https://github.com/shuhuang/batterygui/blob/master/LICENSE)
+
+Tools for auto-generating the battery materials database.
 
 ## Installation
 
@@ -44,3 +46,4 @@ After the raw data is extracted, it needs to be cleaned and converted into a sta
   publisher={Nature Publishing Group}
 }
 ```
+[![DOI](https://zenodo.org/badge/DOI/10.1038/s41597-020-00602-2.svg)](https://doi.org/10.1038/s41597-020-00602-2)

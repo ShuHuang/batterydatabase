@@ -4,7 +4,7 @@ extract.py
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Extract the raw battery data.
-
+author: Shu Huang (sh2009@cam.ac.uk)
 """
 
 from database import BatteryDataBase

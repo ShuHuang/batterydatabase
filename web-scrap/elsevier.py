@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Elsevier web-scraper. PLEASE use your own API key.
-"""
+web-scrap.rsc.py
+~~~~~~~~~~~~~~~~
 
-__author__ = "Shu Huang"
-__email__ = "sh2009@cam.ac.uk"
+Elsevier web-scraper. PLEASE use your own API key.
+author: Shu Huang (sh2009@cam.ac.uk)
+"""
 
 import json
 import requests

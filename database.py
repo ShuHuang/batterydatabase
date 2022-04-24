@@ -4,15 +4,15 @@ database.py
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 BatteryDataBase data structures.
-
+author: Shu Huang (sh2009@cam.ac.uk)
 """
 
-from chemdataextractor_batteries.chemdataextractor import Document
+from chemdataextractor_batteries.chemdataextractor15 import Document
 import json
 import copy
 
 
-class BatteryDataBase():
+class BatteryDataBase:
 
     def __init__(self, paper_root, save_root, filename):
         self.dic = None
@@ -29,6 +29,7 @@ class BatteryDataBase():
 
     def extract(self, file):
         """
+
         :param file: The parsing files (HTML/XML...)
         :return: Write the record into the documents
         """
@@ -81,12 +82,10 @@ class BatteryDataBase():
 
     def distribute(self, dic):
         """
+        Extract chemical names if a length of a list > 1
+
         :param dic: A dictionary returned by CDE
         :return: A list of dictionaries with valid records
-        """
-        """
-        Extract chemical names if a length of a list > 1
-        Create a new key: 'names' (list)
         """
         # Create a key 'names' (list)
         name_length = next(iter(dic.values()))['compound']['Compound']['names']
@@ -108,6 +107,8 @@ class BatteryDataBase():
 
     def distribute_value_and_names(self, dic):
         """
+        Distribute the value and names into a list of dictionaries
+
         :param dic: A single dictionary, with keys 'names' and 'value' as 2 lists
         :return: A list of dictionaries with single name and value
         """
