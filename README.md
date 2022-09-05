@@ -33,17 +33,16 @@ python extract.py --input_dir test/ --output_dir save/ --start 0 --end 1 --save_
 After the raw data is extracted, it needs to be cleaned and converted into a standard format. We provide the data cleaning code in `dataclean.ipynb`. The final data format can be `.json`, `.csv` or `.db`.
 
 ## Citation
-
 ```
-@article{huang2022batterybert,
-  title={BatteryBERT: A Pretrained Language Model for Battery Database Enhancement},
+@article{huang2020database,
+  title={A database of battery materials auto-generated using ChemDataExtractor},
   author={Huang, Shu and Cole, Jacqueline M},
-  journal={J. Chem. Inf. Model.},
-  year={2022},
-  doi={10.1021/acs.jcim.2c00035},
-  url={DOI:10.1021/acs.jcim.2c00035},
-  pages={DOI: 10.1021/acs.jcim.2c00035},
-  publisher={ACS Publications}
+  journal={Scientific Data},
+  volume={7},
+  number={1},
+  pages={1--13},
+  year={2020},
+  publisher={Nature Publishing Group}
 }
 ```
-[![DOI](https://zenodo.org/badge/DOI/10.1038/s41597-020-00602-2.svg)](https://doi.org/100.1021/acs.jcim.2c00035)
+[![DOI](https://zenodo.org/badge/DOI/10.1038/s41597-020-00602-2.svg)](https://doi.org/10.1038/s41597-020-00602-2)
